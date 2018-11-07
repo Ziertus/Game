@@ -3,18 +3,38 @@
 #include <lpc17xx.h>
 #include "stdio.h"
 #include "stdlib.h"
-#include "random.h"
-#include "lfsr113.h"
 #include "GLCD.h"
 #include "uart.h"
 #include "stdbool.h"
 
+int map[16][12];
+
 void putPix(unsigned int x, unsigned int y)
 {
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j <24; j++)
-			GLCD_PutPixel(x-3+i,y-4+j);
+	for(int i = 0; i < 20; i++)
+		for(int j = 0; j <20; j++)
+			GLCD_PutPixel(x+i,y+j);
 }
+
+void displayMap(int map[16][12])
+{
+	for(int i = 0; i < 16; i++)
+	{
+		for(int j = 0; j <12; j++)
+		{
+			if(map[i][j] == 0)
+				GLCD_SetTextColor(Red);
+			else if(map[i][j] == 1)
+				GLCD_SetTextColor(White);
+			else if(map[i][j] == 2)
+				GLCD_SetTextColor(Yellow);
+			else if(map[i][j] == 3)
+				GLCD_SetTextColor(Green);
+			putPix(20*i, 20*j);
+		}
+	}
+}
+
 struct info_t {
 	int rec;
 	uint32_t overflow;
@@ -26,27 +46,10 @@ typedef struct info_t* INFO;
 uint32_t count;
 struct info_t *s1, *s2;
 
-
-void client (void const *arg)
-{
-  while (true)
-	{
-	}
-}
-
-void server (void const *arg)
-{
-	while (true)
-	{
-		
-	}
-}
-
 void monitor (void const *arg) {
 	GLCD_Init();
-	GLCD_Clear(Blue);
-	GLCD_SetTextColor(White);
-	GLCD_SetBackColor(Blue);
+	GLCD_Clear(White);
+	GLCD_SetBackColor(White);
 	char str[25];
 	while (true)
 	{
@@ -66,7 +69,7 @@ void monitor (void const *arg) {
 //		GLCD_DisplayString(7, 0, 1, (unsigned char*)str);
 //		sprintf(str, "Overflow: %d", s2->overflow);
 //		GLCD_DisplayString(8, 0, 1, (unsigned char*)str);
-		putPix(5,5);
+		displayMap(map);
 	}
 }
 
@@ -74,12 +77,23 @@ int main (void)
 {
 	//Generate Map
 	//Pixel: 240x320
-	int map[10][20];
+	//Walls = 2  |  Path = 1  |  Player = 0  |  Finish = 3
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 12; j++)
+		{
+			int random = rand()% 19;
+			if(random < 11)
+				map[i][j] = 2;
+			else
+				map[i][j] = 1;
+		}
+
+	map[0][rand()%12] = 0;
+	map[15][rand()%12] = 3;
+	
 	// Multi-Threading
 	osKernelInitialize();
 	osKernelStart();
-	osThreadDef(client, osPriorityNormal, 1, 0);
-	osThreadDef(server, osPriorityNormal, 2, 0);
 	osThreadDef(monitor, osPriorityNormal, 1, 0);
 	s1 = (INFO)malloc(sizeof(struct info_t));
 	s1->rec = 0;
@@ -87,9 +101,5 @@ int main (void)
 	s2 = (INFO)malloc(sizeof(struct info_t));
 	s2->rec = 0;
 	s2->overflow = 0;
-	printf("NO");
 	osThreadCreate(osThread(monitor), NULL);
-	osThreadCreate(osThread(client), NULL);
-	osThreadCreate(osThread(server), s1);
-	osThreadCreate(osThread(server), s2);
 }
