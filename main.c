@@ -72,8 +72,8 @@ void monitor (void const *arg) {
 
 int main (void)
 {
-	//Generate Map 10x20 0-9, 0-19
-	//  Pixel: 24*10 x 16*20
+	//Generate Map
+	//Pixel: 240x320
 	int map[10][20];
 	// Multi-Threading
 	osKernelInitialize();
