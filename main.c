@@ -6,7 +6,7 @@
 #include "GLCD.h"
 #include "uart.h"
 #include "stdbool.h"
-//#include "sodium.h"  PAOLO PLZ
+//#include "sodium.h"  PAOLO PLZ https://stackoverflow.com/questions/822323/how-to-generate-a-random-int-in-c/39475626#39475626
 
 int map[16][12];
 
