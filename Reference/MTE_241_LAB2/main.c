@@ -13,10 +13,10 @@ void delay_ms(unsigned int ms)
 }
 
 // Represent output in binary with LEDs
-/*
+
 int main(void)
 {
-	int output = 15;
+	int output = 127;
 	int num[8];
 	// Loading array with pin values
 	num[0] = (1 << 28);
@@ -50,7 +50,7 @@ int main(void)
 	
 	while(1);
 }
-*/
+
 
 // States the current state of the joystick
 /*
@@ -118,7 +118,7 @@ int main(void)
 */
 
 // Putting it all together
-
+/*
 void potentiometer(void const *arg) {
 	LPC_SC->PCONP |= (1 << 12 );
 	LPC_PINCON->PINSEL1 &= ~(0x3 << 18);
@@ -208,3 +208,4 @@ int main(void)
 	osThreadCreate(osThread(joystick), NULL);
 	osThreadCreate(osThread(pushbutton), NULL);
 }
+*/
