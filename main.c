@@ -18,12 +18,12 @@ char final_time[6];
 // Delay Function: source https://www.exploreembedded.com/wiki/LPC1768:_Led_Blinking
 void delay_ms(unsigned int ms)
 {
-    unsigned int i, j;
+	unsigned int i, j;
 	
-    for(i = 0; i < ms; i++)
-		{
-				for(j = 0; j < 20000; j++);
-		}
+	for(i = 0; i < ms; i++)
+	{
+		for(j = 0; j < 20000; j++);
+	}
 }
 
 // Function for drawing a 20x20 block on the LCD
