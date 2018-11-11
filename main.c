@@ -11,7 +11,17 @@
 int map[16][12] = {1};
 int pos_x = 0;
 int pos_y = 0;
-int blockSize = 20;
+
+// Delay Function: source https://www.exploreembedded.com/wiki/LPC1768:_Led_Blinking
+void delay_ms(unsigned int ms)
+{
+    unsigned int i, j;
+	
+    for(i = 0; i < ms; i++)
+		{
+        for(j = 0; j < 20000; j++);
+		}
+}
 
 // Function for drawing a 20x20 block on the LCD
 // Input arguments designate top left pixel of the block
@@ -54,69 +64,6 @@ void displayMap(int map[16][12])
 	}
 }
 
-void joystick(void const *arg)
-{
-	int up, right, down, left;
-	while (1)
-	{
-		up = (LPC_GPIO1->FIOPIN >> 23) & 0x01;
-		right = (LPC_GPIO1->FIOPIN >> 24) & 0x01;
-		down = (LPC_GPIO1->FIOPIN >> 25) & 0x01;
-		left = (LPC_GPIO1->FIOPIN >> 26) & 0x01;
-		if (!up && !(map[pos_x][pos_y-1] == 2) && pos_y > 0)
-		{
-			GLCD_SetTextColor(Red);
-			map[pos_x][pos_y--] = 0;
-			PutPix(pos_x, pos_y--);
-			GLCD_SetTextColor(White);
-			map[pos_x][pos_y+blockSize+1] = 1;
-			PutPix(pos_x, pos_y+blockSize+1);
-		}
-		else if (!right && !(map[pos_x+blockSize+1][pos_y] == 2) && pos_x < 320-blockSize)
-		{
-			GLCD_SetTextColor(Red);
-			map[pos_x+blockSize+1][pos_y] = 0;
-			PutPix(pos_x+blockSize+1, pos_y);
-			GLCD_SetTextColor(White);
-			map[pos_x-1][pos_y] = 1;
-			PutPix(pos_x-1, pos_y);
-		}
-		else if (!down && !(map[pos_x][pos_y+blockSize+1] == 2) && pos_y < 240-blockSize)
-		{
-			GLCD_SetTextColor(Red);
-			map[pos_x][pos_y+blockSize+1] = 0;
-			PutPix(pos_x, pos_y+blockSize+1);
-			GLCD_SetTextColor(White);
-			map[pos_x][pos_y-1] = 1;
-			PutPix(pos_x, pos_y-1);
-		}
-		else if (!left && !(map[pos_x-1][pos_y] == 2) && pos_x > 0)
-		{
-			GLCD_SetTextColor(Red);
-			map[pos_x--][pos_y] = 0;
-			PutPix(pos_x--, pos_y);
-			GLCD_SetTextColor(White);
-			map[pos_x+blockSize+1][pos_y] = 1;
-			PutPix(pos_x+blockSize+1, pos_y);
-		}
-
-		delay_ms(500);
-		osThreadYield();
-	}
-}
-
-struct info_t
-{
-	int rec;
-	uint32_t overflow;
-	osMailQId qid;
-};
-
-typedef struct info_t* INFO;
-
-uint32_t count;
-struct info_t *s1, *s2;
-
 void monitor (void const *arg)
 {
 	GLCD_Init();
@@ -127,7 +74,6 @@ void monitor (void const *arg)
 		displayMap(map);
 	}
 }
-
 
 void bombs (void const *arg)
 {
@@ -181,6 +127,58 @@ void bombs (void const *arg)
 		}
 	}
 }
+
+void joystick(void const *arg)
+{
+	int up, right, down, left;
+	while (1)
+	{
+		up = (LPC_GPIO1->FIOPIN >> 23) & 0x01;
+		right = (LPC_GPIO1->FIOPIN >> 24) & 0x01;
+		down = (LPC_GPIO1->FIOPIN >> 25) & 0x01;
+		left = (LPC_GPIO1->FIOPIN >> 26) & 0x01;
+		printf("%d, %d, | Curr: %d, Above: %d, Right: %d, Below: %d, Left: %d\n", pos_x, pos_y, map[pos_x][pos_y], map[pos_x][pos_y-1], map[pos_x+1][pos_y], map[pos_x][pos_y+1], map[pos_x-1][pos_y]);
+		if (!up && map[pos_x][pos_y-1] == 1 && pos_y > 0)
+		{
+			pos_y--;
+			map[pos_x][pos_y] = 0;
+			map[pos_x][pos_y+1] = 1;
+		}
+		else if (!right && map[pos_x+1][pos_y] == 1 && pos_x < 16)
+		{
+			pos_x++;
+			map[pos_x][pos_y] = 0;
+			map[pos_x-1][pos_y] = 1;
+		}
+		else if (!down && map[pos_x][pos_y+1] == 1 && pos_y < 12)
+		{
+			pos_y++;
+			map[pos_x][pos_y] = 0;
+			map[pos_x][pos_y-1] = 1;
+		}
+		else if (!left && map[pos_x-1][pos_y] == 1 && pos_x > 0)
+		{
+			pos_x--;
+			map[pos_x][pos_y] = 0;
+			map[pos_x+1][pos_y] = 1;
+		}
+
+		delay_ms(100);
+		osThreadYield();
+	}
+}
+
+struct info_t
+{
+	int rec;
+	uint32_t overflow;
+	osMailQId qid;
+};
+
+typedef struct info_t* INFO;
+
+uint32_t count;
+struct info_t *s1, *s2;
 
 int main (void)
 {
