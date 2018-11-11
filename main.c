@@ -254,7 +254,7 @@ int main (void)
 	
 	pos_y = rand() % 12;
 	map[pos_x][pos_y] = 0;
-	map[0][rand() % 12] = 3;
+	map[15][rand() % 12] = 3;
 	
 	monitor(NULL);
 	
