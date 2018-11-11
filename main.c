@@ -12,6 +12,8 @@ int map[16][12] = {1};
 int pos_x = 0;
 int pos_y = 0;
 int blockSize = 20;
+int time = 0;
+char final_time[6];
 
 // Delay Function: source https://www.exploreembedded.com/wiki/LPC1768:_Led_Blinking
 void delay_ms(unsigned int ms)
@@ -73,6 +75,75 @@ void monitor (void const *arg)
 	displayMap(map);
 }
 
+void joystick(void const *arg)
+{
+	int up, right, down, left;
+	while (1)
+	{
+		up = (LPC_GPIO1->FIOPIN >> 23) & 0x01;
+		right = (LPC_GPIO1->FIOPIN >> 24) & 0x01;
+		down = (LPC_GPIO1->FIOPIN >> 25) & 0x01;
+		left = (LPC_GPIO1->FIOPIN >> 26) & 0x01;
+		printf("Player Coordinates: (%d, %d) | Current: %d, Above: %d, Right: %d, Below: %d, Left: %d\n", 
+			pos_x, pos_y, map[pos_x][pos_y], map[pos_x][pos_y-1], map[pos_x+1][pos_y], map[pos_x][pos_y+1], map[pos_x-1][pos_y]);
+		if (!up && (map[pos_x][pos_y-1] == 1 || map[pos_x][pos_y-1] == 3) && pos_y > 0)
+		{
+			GLCD_SetTextColor(Red);
+			pos_y--;
+			if (map[pos_x][pos_y] == 1)
+			{
+				map[pos_x][pos_y] = 0;
+				putPix(pos_x*blockSize, pos_y*blockSize);
+				GLCD_SetTextColor(White);
+				map[pos_x][pos_y+1] = 1;
+				putPix(pos_x*blockSize, (pos_y+1)*blockSize);
+			}
+		}
+		else if (!right && (map[pos_x+1][pos_y] == 1 || map[pos_x+1][pos_y] == 3) && pos_x < 16)
+		{
+			GLCD_SetTextColor(Red);
+			pos_x++;
+			if (map[pos_x][pos_y] == 1)
+			{
+				map[pos_x][pos_y] = 0;
+				putPix(pos_x*blockSize, pos_y*blockSize);
+				GLCD_SetTextColor(White);
+				map[pos_x-1][pos_y] = 1;
+				putPix((pos_x-1)*blockSize, pos_y*blockSize);
+			}
+		}
+		else if (!down && (map[pos_x][pos_y+1] == 1 || map[pos_x][pos_y+1] == 3) && pos_y < 12)
+		{
+			GLCD_SetTextColor(Red);
+			pos_y++;
+			if (map[pos_x][pos_y] == 1)
+			{
+				map[pos_x][pos_y] = 0;
+				putPix(pos_x*blockSize, pos_y*blockSize);
+				GLCD_SetTextColor(White);
+				map[pos_x][pos_y-1] = 1;
+				putPix(pos_x*blockSize, (pos_y-1)*blockSize);
+			}
+		}
+		else if (!left && (map[pos_x-1][pos_y] == 1 || map[pos_x-1][pos_y] == 3) && pos_x > 0)
+		{
+			GLCD_SetTextColor(Red);
+			pos_x--;
+			if (map[pos_x][pos_y] == 1)
+			{
+				map[pos_x][pos_y] = 0;
+				putPix(pos_x*blockSize, pos_y*blockSize);
+				GLCD_SetTextColor(White);
+				map[pos_x+1][pos_y] = 1;
+				putPix((pos_x+1)*blockSize, pos_y*blockSize);
+			}
+		}
+
+		delay_ms(100);
+		osThreadYield();
+	}
+}
+
 void bombs (void const *arg)
 {
 	int buttonPushed, bomb = 7;
@@ -126,59 +197,25 @@ void bombs (void const *arg)
 	}
 }
 
-void joystick(void const *arg)
+void win (void const *arg)
 {
-	int up, right, down, left;
-	while (1)
+	while (true)
 	{
-		up = (LPC_GPIO1->FIOPIN >> 23) & 0x01;
-		right = (LPC_GPIO1->FIOPIN >> 24) & 0x01;
-		down = (LPC_GPIO1->FIOPIN >> 25) & 0x01;
-		left = (LPC_GPIO1->FIOPIN >> 26) & 0x01;
-		printf("Player Coordinates: (%d, %d), | Current: %d, Above: %d, Right: %d, Below: %d, Left: %d\n", pos_x, pos_y, map[pos_x][pos_y], map[pos_x][pos_y-1], map[pos_x+1][pos_y], map[pos_x][pos_y+1], map[pos_x-1][pos_y]);
-		if (!up && map[pos_x][pos_y-1] == 1 && pos_y > 0)
+		time++;
+		if (map[pos_x][pos_y] == 3)
 		{
-			GLCD_SetTextColor(Red);
-			pos_y--;
-			map[pos_x][pos_y] = 0;
-			putPix(pos_x*blockSize, pos_y*blockSize);
-			GLCD_SetTextColor(White);
-			map[pos_x][pos_y+1] = 1;
-			putPix(pos_x*blockSize, (pos_y+1)*blockSize);
+			GLCD_Clear(White);
+			unsigned char string1[6] = "You ";
+			unsigned char string2[6] = "Win!";
+			GLCD_SetTextColor(Black);
+			GLCD_SetBackColor(White);
+			GLCD_DisplayString(4, 6, 1, string1);
+			GLCD_DisplayString(4, 10, 1, string2);
+			sprintf(final_time, "Time: %ds", time);
+			GLCD_DisplayString(6, 6, 1, (unsigned char*)final_time);
+			while (true);
 		}
-		else if (!right && map[pos_x+1][pos_y] == 1 && pos_x < 16)
-		{
-			GLCD_SetTextColor(Red);
-			pos_x++;
-			map[pos_x][pos_y] = 0;
-			putPix(pos_x*blockSize, pos_y*blockSize);
-			GLCD_SetTextColor(White);
-			map[pos_x-1][pos_y] = 1;
-			putPix((pos_x-1)*blockSize, pos_y*blockSize);
-		}
-		else if (!down && map[pos_x][pos_y+1] == 1 && pos_y < 12)
-		{
-			GLCD_SetTextColor(Red);
-			pos_y++;
-			map[pos_x][pos_y] = 0;
-			putPix(pos_x*blockSize, pos_y*blockSize);
-			GLCD_SetTextColor(White);
-			map[pos_x][pos_y-1] = 1;
-			putPix(pos_x*blockSize, (pos_y-1)*blockSize);
-		}
-		else if (!left && map[pos_x-1][pos_y] == 1 && pos_x > 0)
-		{
-			GLCD_SetTextColor(Red);
-			pos_x--;
-			map[pos_x][pos_y] = 0;
-			putPix(pos_x*blockSize, pos_y*blockSize);
-			GLCD_SetTextColor(White);
-			map[pos_x+1][pos_y] = 1;
-			putPix((pos_x+1)*blockSize, pos_y*blockSize);
-		}
-
-		delay_ms(100);
-		osThreadYield();
+		osDelay(7100);
 	}
 }
 
@@ -217,7 +254,7 @@ int main (void)
 	
 	pos_y = rand() % 12;
 	map[pos_x][pos_y] = 0;
-	map[15][rand() % 12] = 3;
+	map[0][rand() % 12] = 3;
 	
 	monitor(NULL);
 	
@@ -235,7 +272,9 @@ int main (void)
 
 	osThreadDef(joystick, osPriorityNormal, 1, 0);
 	osThreadDef(bombs, osPriorityNormal, 1, 0);
+	osThreadDef(win, osPriorityNormal, 1, 0);
 
 	osThreadCreate(osThread(joystick), NULL);
 	osThreadCreate(osThread(bombs), NULL);
+	osThreadCreate(osThread(win), NULL);
 }
