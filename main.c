@@ -22,7 +22,7 @@ void delay_ms(unsigned int ms)
 	
     for(i = 0; i < ms; i++)
 		{
-        for(j = 0; j < 20000; j++);
+				for(j = 0; j < 20000; j++);
 		}
 }
 
