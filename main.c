@@ -187,12 +187,24 @@ void bombs (void const *arg)
 			{
 				LPC_GPIO1->FIOCLR |= leds[bomb];
 			}
+			
 			bomb--;
 			if (bomb < 0)
 			{
 				osThreadTerminate(osThreadGetId());
 			}
+			GLCD_SetTextColor(White);
 			osDelay(15000);
+			int xnew = pos_x-1;
+			int ynew = pos_y-1;
+			for(int i = 0; i<3; i++){
+				for(int j=0;j < 3; j++){
+					
+					if(xnew!=pos_x && ynew!=pos_y)
+						map[xnew][ynew] = 1;
+				}
+			}
+			displayMap(map);
 		}
 	}
 }
