@@ -84,8 +84,8 @@ void joystick(void const *arg)
 		right = (LPC_GPIO1->FIOPIN >> 24) & 0x01;
 		down = (LPC_GPIO1->FIOPIN >> 25) & 0x01;
 		left = (LPC_GPIO1->FIOPIN >> 26) & 0x01;
-		printf("Player Coordinates: (%d, %d) | Current: %d, Above: %d, Right: %d, Below: %d, Left: %d\n", 
-			pos_x, pos_y, map[pos_x][pos_y], map[pos_x][pos_y-1], map[pos_x+1][pos_y], map[pos_x][pos_y+1], map[pos_x-1][pos_y]);
+		//printf("Player Coordinates: (%d, %d) | Current: %d, Above: %d, Right: %d, Below: %d, Left: %d\n", 
+		//	pos_x, pos_y, map[pos_x][pos_y], map[pos_x][pos_y-1], map[pos_x+1][pos_y], map[pos_x][pos_y+1], map[pos_x-1][pos_y]);
 		if (!up && (map[pos_x][pos_y-1] == 1 || map[pos_x][pos_y-1] == 3) && pos_y > 0)
 		{
 			GLCD_SetTextColor(Red);
@@ -187,24 +187,25 @@ void bombs (void const *arg)
 			{
 				LPC_GPIO1->FIOCLR |= leds[bomb];
 			}
-			
+			GLCD_SetTextColor(White);
+			for(int i = 0; i<3; i++){
+				int xnew = pos_x-1+i;
+				for(int j=0;j < 3; j++){
+					int ynew = pos_y-1+j;
+					if(!(xnew==pos_x && ynew==pos_y) && xnew<16 && ynew<12 && xnew>=0 && ynew >=0 && map[xnew][ynew]!=3)
+					{
+						printf("%d   %d \n",xnew,ynew);
+						map[xnew][ynew] = 1;
+						putPix(xnew*20, ynew*20);
+					}
+				}
+			}
 			bomb--;
 			if (bomb < 0)
 			{
 				osThreadTerminate(osThreadGetId());
 			}
-			GLCD_SetTextColor(White);
 			osDelay(15000);
-			int xnew = pos_x-1;
-			int ynew = pos_y-1;
-			for(int i = 0; i<3; i++){
-				for(int j=0;j < 3; j++){
-					
-					if(xnew!=pos_x && ynew!=pos_y)
-						map[xnew][ynew] = 1;
-				}
-			}
-			displayMap(map);
 		}
 	}
 }
@@ -289,4 +290,5 @@ int main (void)
 	osThreadCreate(osThread(joystick), NULL);
 	osThreadCreate(osThread(bombs), NULL);
 	osThreadCreate(osThread(win), NULL);
+	while(true);
 }
