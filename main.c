@@ -15,6 +15,11 @@ int blockSize = 20;
 int time = 0;
 char final_time[6];
 
+osSemaphoreDef(semaphore_1);
+osSemaphoreDef(semaphore_2);
+osSemaphoreId(semaphore_id_1);
+osSemaphoreId(semaphore_id_2);
+
 // Delay Function: source https://www.exploreembedded.com/wiki/LPC1768:_Led_Blinking
 void delay_ms(unsigned int ms)
 {
@@ -80,12 +85,11 @@ void joystick(void const *arg)
 	int up, right, down, left;
 	while (1)
 	{
+		osSemaphoreWait(semaphore_id_1, osWaitForever);
 		up = (LPC_GPIO1->FIOPIN >> 23) & 0x01;
 		right = (LPC_GPIO1->FIOPIN >> 24) & 0x01;
 		down = (LPC_GPIO1->FIOPIN >> 25) & 0x01;
 		left = (LPC_GPIO1->FIOPIN >> 26) & 0x01;
-		//printf("Player Coordinates: (%d, %d) | Current: %d, Above: %d, Right: %d, Below: %d, Left: %d\n", 
-		//	pos_x, pos_y, map[pos_x][pos_y], map[pos_x][pos_y-1], map[pos_x+1][pos_y], map[pos_x][pos_y+1], map[pos_x-1][pos_y]);
 		if (!up && (map[pos_x][pos_y-1] == 1 || map[pos_x][pos_y-1] == 3) && pos_y > 0)
 		{
 			GLCD_SetTextColor(Red);
@@ -138,7 +142,11 @@ void joystick(void const *arg)
 				putPix((pos_x+1)*blockSize, pos_y*blockSize);
 			}
 		}
-
+		if (map[pos_x][pos_y] == 3)
+		{
+			osThreadTerminate(osThreadGetId());
+		}
+		osSemaphoreRelease(semaphore_id_2);
 		delay_ms(100);
 		osThreadYield();
 	}
@@ -176,6 +184,7 @@ void bombs (void const *arg)
 	
 	while (true)
 	{
+		osSemaphoreWait(semaphore_id_2, osWaitForever);
 		buttonPushed = (LPC_GPIO2->FIOPIN >> 10) & 0x01;
 		if (!buttonPushed)
 		{
@@ -188,13 +197,15 @@ void bombs (void const *arg)
 				LPC_GPIO1->FIOCLR |= leds[bomb];
 			}
 			GLCD_SetTextColor(White);
-			for(int i = 0; i<3; i++){
+			for (int i = 0; i < 3; i++)
+			{
 				int xnew = pos_x-1+i;
-				for(int j=0;j < 3; j++){
+				for (int j = 0; j < 3; j++)
+				{
 					int ynew = pos_y-1+j;
-					if(!(xnew==pos_x && ynew==pos_y) && xnew<16 && ynew<12 && xnew>=0 && ynew >=0 && map[xnew][ynew]!=3)
+					if (!(xnew == pos_x && ynew == pos_y) && xnew < 16 && ynew < 12 && xnew >= 0 && ynew >= 0 && map[xnew][ynew] != 3)
 					{
-						printf("%d   %d \n",xnew,ynew);
+						printf("%d   %d \n", xnew, ynew);
 						map[xnew][ynew] = 1;
 						putPix(xnew*20, ynew*20);
 					}
@@ -205,7 +216,11 @@ void bombs (void const *arg)
 			{
 				osThreadTerminate(osThreadGetId());
 			}
-			osDelay(15000);
+		}
+		osSemaphoreRelease(semaphore_id_1);
+		if (!buttonPushed)
+		{
+			osDelay(10000);
 		}
 	}
 }
@@ -245,7 +260,9 @@ uint32_t count;
 struct info_t *s1, *s2;
 
 int main (void)
-{	
+{
+	semaphore_id_1 = osSemaphoreCreate(osSemaphore(semaphore_1), 1);
+	semaphore_id_2 = osSemaphoreCreate(osSemaphore(semaphore_2), 0);
 	// Generate map
 	// Pixels: 240x320
 	// Player = 0 | Path = 1 | Walls = 2 | Finish = 3

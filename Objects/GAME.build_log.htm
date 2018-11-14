@@ -9,7 +9,7 @@ License Information: Eric Praetzel, ECE Dept, LIC=----
  
 Tool Versions:
 Toolchain:       MDK-Lite  Version: 5.24.1
-Toolchain Path:  C:\software\Keil_v5\ARM\ARMCC\Bin
+Toolchain Path:  C:\Software\Keil_v5\ARM\ARMCC\Bin
 C Compiler:      Armcc.exe V5.06 update 5 (build 528)
 Assembler:       Armasm.exe V5.06 update 5 (build 528)
 Linker/Locator:  ArmLink.exe V5.06 update 5 (build 528)
@@ -21,20 +21,20 @@ Target DLL:      UL2CM3.DLL V1.160.3.0
 Dialog DLL:      TCM.DLL V1.32.0.0
  
 <h2>Project:</h2>
-N:\Game\GAME.uvprojx
-Project File Date:  11/13/2018
+N:\School\2B\MTE_241\Maze_Race\GAME.uvprojx
+Project File Date:  11/11/2018
 
 <h2>Output:</h2>
-*** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\software\Keil_v5\ARM\ARMCC\Bin'
+*** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\Software\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Target 1'
 compiling main.c...
-main.c(155): warning:  #61-D: integer operation result is out of range
+main.c(163): warning:  #61-D: integer operation result is out of range
   	leds[2] = (1 << 31);
-main.c(155): warning:  #68-D: integer conversion resulted in a change of sign
+main.c(163): warning:  #68-D: integer conversion resulted in a change of sign
   	leds[2] = (1 << 31);
 main.c: 2 warnings, 0 errors
 linking...
-Program Size: Code=11660 RO-data=6676 RW-data=928 ZI-data=21016  
+Program Size: Code=12208 RO-data=6684 RW-data=952 ZI-data=21016  
 ".\Objects\GAME.axf" - 0 Error(s), 2 Warning(s).
 
 <h2>Software Packages used:</h2>
@@ -56,37 +56,37 @@ Package Vendor: Keil
 <h2>Collection of Component include folders:</h2>
   .\RTE\Device\LPC1768
   .\RTE\_Target_1
-  C:\software\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\CMSIS\Include
-  C:\software\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\CMSIS\RTOS\RTX\INC
-  C:\software\Keil_v5\ARM\PACK\Keil\LPC1700_DFP\2.4.0\Device\Include
+  C:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\CMSIS\Include
+  C:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\CMSIS\RTOS\RTX\INC
+  C:\Software\Keil_v5\ARM\PACK\Keil\LPC1700_DFP\2.4.0\Device\Include
 
 <h2>Collection of Component Files used:</h2>
 
    * Component: Keil::Device:Startup:1.0.0
+      Source file:   Device\Source\ARM\startup_LPC17xx.s
+      Include file:  RTE_Driver\Config\RTE_Device.h
       Include file:  Device\Include\LPC17xx.h
       Source file:   Device\Source\system_LPC17xx.c
-      Include file:  RTE_Driver\Config\RTE_Device.h
-      Source file:   Device\Source\ARM\startup_LPC17xx.s
 
    * Component: ARM::CMSIS:RTOS:Keil RTX:4.81.1
+      Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\main.c
+      Include file:  CMSIS\RTOS\RTX\INC\cmsis_os.h
       Source file:   CMSIS\RTOS\RTX\Templates\RTX_Conf_CM.c
       Include file:  CMSIS\RTOS\RTX\UserCodeTemplates\osObjects.h
+      Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\MailQueue.c
       Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\MemPool.c
       Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\MsgQueue.c
       Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\Mutex.c
-      Include file:  CMSIS\RTOS\RTX\INC\cmsis_os.h
-      Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\main.c
-      Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\MailQueue.c
-      Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\Semaphore.c
       Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\Timer.c
-      Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\Thread.c
       Library file:  CMSIS\RTOS\RTX\LIB\ARM\RTX_CM3.lib
+      Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\Semaphore.c
       Source file:   CMSIS\RTOS\RTX\SRC\ARM\SVC_Table.s
+      Source file:   CMSIS\RTOS\RTX\UserCodeTemplates\Thread.c
 
    * Component: ARM::CMSIS:CORE:5.1.1
 
    * Component: ::CMSIS:RTOS:1.0.0 (API)
-Build Time Elapsed:  00:00:01
+Build Time Elapsed:  00:00:00
 </pre>
 </body>
 </html>
