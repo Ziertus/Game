@@ -186,7 +186,7 @@ void bombs (void const *arg)
 	{
 		osSemaphoreWait(semaphore_id_2, osWaitForever);
 		buttonPushed = (LPC_GPIO2->FIOPIN >> 10) & 0x01;
-		if (!buttonPushed)
+		if (!buttonPushed && bomb >= 0)
 		{
 			if (bomb > 2)
 			{
@@ -212,10 +212,6 @@ void bombs (void const *arg)
 				}
 			}
 			bomb--;
-			if (bomb < 0)
-			{
-				osThreadTerminate(osThreadGetId());
-			}
 		}
 		osSemaphoreRelease(semaphore_id_1);
 		if (!buttonPushed)
@@ -307,5 +303,5 @@ int main (void)
 	osThreadCreate(osThread(joystick), NULL);
 	osThreadCreate(osThread(bombs), NULL);
 	osThreadCreate(osThread(win), NULL);
-	while(true);
+	while (true);
 }
