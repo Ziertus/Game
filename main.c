@@ -8,13 +8,16 @@
 #include "stdbool.h"
 // #include "sodium.h"  https://stackoverflow.com/questions/822323/how-to-generate-a-random-int-in-c/39475626#39475626
 
+// Create map, player position and size, and time
 int map[16][12] = {1};
 int pos_x = 0;
 int pos_y = 0;
 int blockSize = 20;
 int time = 0;
 char final_time[6];
+int end = 0;
 
+// Define semaphores (used to protect joystick/bomb multiple inputs)
 osSemaphoreDef(semaphore_1);
 osSemaphoreDef(semaphore_2);
 osSemaphoreId(semaphore_id_1);
@@ -44,7 +47,7 @@ void putPix(unsigned int x, unsigned int y)
 	}
 }
 
-// Displays map on LCD
+// Displays map on LCD, utilizes random
 void displayMap(int map[16][12])
 {
 	for (int i = 0; i < 16; i++)
@@ -72,6 +75,7 @@ void displayMap(int map[16][12])
 	}
 }
 
+// Initializes LCD and calls function to display map
 void monitor (void const *arg)
 {
 	GLCD_Init();
@@ -80,16 +84,20 @@ void monitor (void const *arg)
 	displayMap(map);
 }
 
+// Thread to handle the joystick
 void joystick(void const *arg)
 {
 	int up, right, down, left;
 	while (1)
 	{
+		// Prevent joystick and bomb multiple inputs
 		osSemaphoreWait(semaphore_id_1, osWaitForever);
 		up = (LPC_GPIO1->FIOPIN >> 23) & 0x01;
 		right = (LPC_GPIO1->FIOPIN >> 24) & 0x01;
 		down = (LPC_GPIO1->FIOPIN >> 25) & 0x01;
 		left = (LPC_GPIO1->FIOPIN >> 26) & 0x01;
+		
+		// Up
 		if (!up && (map[pos_x][pos_y-1] == 1 || map[pos_x][pos_y-1] == 3) && pos_y > 0)
 		{
 			GLCD_SetTextColor(Red);
@@ -103,6 +111,8 @@ void joystick(void const *arg)
 				putPix(pos_x*blockSize, (pos_y+1)*blockSize);
 			}
 		}
+		
+		// Right
 		else if (!right && (map[pos_x+1][pos_y] == 1 || map[pos_x+1][pos_y] == 3) && pos_x < 16)
 		{
 			GLCD_SetTextColor(Red);
@@ -116,6 +126,8 @@ void joystick(void const *arg)
 				putPix((pos_x-1)*blockSize, pos_y*blockSize);
 			}
 		}
+		
+		// Down
 		else if (!down && (map[pos_x][pos_y+1] == 1 || map[pos_x][pos_y+1] == 3) && pos_y < 12)
 		{
 			GLCD_SetTextColor(Red);
@@ -129,6 +141,8 @@ void joystick(void const *arg)
 				putPix(pos_x*blockSize, (pos_y-1)*blockSize);
 			}
 		}
+		
+		// Left
 		else if (!left && (map[pos_x-1][pos_y] == 1 || map[pos_x-1][pos_y] == 3) && pos_x > 0)
 		{
 			GLCD_SetTextColor(Red);
@@ -142,6 +156,8 @@ void joystick(void const *arg)
 				putPix((pos_x+1)*blockSize, pos_y*blockSize);
 			}
 		}
+		
+		// If the player wins
 		if (map[pos_x][pos_y] == 3)
 		{
 			osThreadTerminate(osThreadGetId());
@@ -152,6 +168,7 @@ void joystick(void const *arg)
 	}
 }
 
+// Thread to handle the bombs
 void bombs (void const *arg)
 {
 	int buttonPushed, bomb = 7;
@@ -184,6 +201,7 @@ void bombs (void const *arg)
 	
 	while (true)
 	{
+		// Prevent joystick and bomb multiple inputs
 		osSemaphoreWait(semaphore_id_2, osWaitForever);
 		buttonPushed = (LPC_GPIO2->FIOPIN >> 10) & 0x01;
 		if (!buttonPushed && bomb >= 0)
@@ -221,10 +239,12 @@ void bombs (void const *arg)
 	}
 }
 
+// Thread to handle when the player wins
 void win (void const *arg)
 {
 	while (true)
 	{
+		// Display win screen
 		time++;
 		if (map[pos_x][pos_y] == 3)
 		{
@@ -237,30 +257,22 @@ void win (void const *arg)
 			GLCD_DisplayString(4, 10, 1, string2);
 			sprintf(final_time, "Time: %ds", time);
 			GLCD_DisplayString(6, 6, 1, (unsigned char*)final_time);
-			while (true);
+			while (true){
+				end = 1;
+			}
 		}
 		osDelay(7100);
 	}
 }
 
-struct info_t
-{
-	int rec;
-	uint32_t overflow;
-	osMailQId qid;
-};
-
-typedef struct info_t* INFO;
-
-uint32_t count;
-struct info_t *s1, *s2;
-
 int main (void)
 {
+	// Initialize semaphores for use
 	semaphore_id_1 = osSemaphoreCreate(osSemaphore(semaphore_1), 1);
 	semaphore_id_2 = osSemaphoreCreate(osSemaphore(semaphore_2), 0);
+	
 	// Generate map
-	// Pixels: 240x320
+	// Pixels: 240 x 320
 	// Player = 0 | Path = 1 | Walls = 2 | Finish = 3
 	for (int i = 0; i < 16; i++)
 	{
@@ -278,30 +290,65 @@ int main (void)
 		}
 	}
 	
+	// Randomize map
 	pos_y = rand() % 12;
 	map[pos_x][pos_y] = 0;
 	map[15][rand() % 12] = 3;
 	
+	// Display LCD
 	monitor(NULL);
-	
-	// Struct
-	s1 = (INFO)malloc(sizeof(struct info_t));
-	s1 -> rec = 0;
-	s1 -> overflow = 0;
-	s2 = (INFO)malloc(sizeof(struct info_t));
-	s2 -> rec = 0;
-	s2 -> overflow = 0;
 	
 	// Multithreading
 	osKernelInitialize();
 	osKernelStart();
 
+	// Define threads
 	osThreadDef(joystick, osPriorityNormal, 1, 0);
 	osThreadDef(bombs, osPriorityNormal, 1, 0);
 	osThreadDef(win, osPriorityNormal, 1, 0);
-
-	osThreadCreate(osThread(joystick), NULL);
-	osThreadCreate(osThread(bombs), NULL);
-	osThreadCreate(osThread(win), NULL);
-	while (true);
+	
+	osThreadId t1id, t2id, t3id;
+	// Create threads
+	t1id = osThreadCreate(osThread(joystick), NULL);
+	t2id = osThreadCreate(osThread(bombs), NULL);
+	t3id = osThreadCreate(osThread(win), NULL);
+	
+	while (true){
+		int buttonPushed = (LPC_GPIO2->FIOPIN >> 10) & 0x01;
+		if (!buttonPushed && end == 1)
+		{
+			osThreadTerminate(t1id);
+			osThreadTerminate(t2id);
+			osThreadTerminate(t3id);
+			end = time = 0;
+			semaphore_id_1 = osSemaphoreCreate(osSemaphore(semaphore_1), 1);
+			semaphore_id_2 = osSemaphoreCreate(osSemaphore(semaphore_2), 0);
+			for (int i = 0; i < 16; i++)
+			{
+				for (int j = 0; j < 12; j++)
+				{
+					int random = rand() % 19;
+					if (random < 11)
+					{
+						map[i][j] = 2;
+					}
+					else
+					{
+						map[i][j] = 1;
+					}
+				}
+			}
+			// Randomize map
+			pos_x = 0;
+			pos_y = rand() % 12;
+			map[pos_x][pos_y] = 0;
+			map[15][rand() % 12] = 3;
+	
+			monitor(NULL);
+			t1id = osThreadCreate(osThread(joystick), NULL);
+			t2id = osThreadCreate(osThread(bombs), NULL);
+			t3id = osThreadCreate(osThread(win), NULL);
+			osDelay(4000);
+		}
+	}
 }
