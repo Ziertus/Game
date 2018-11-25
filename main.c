@@ -6,7 +6,6 @@
 #include "GLCD.h"
 #include "uart.h"
 #include "stdbool.h"
-// #include "sodium.h"  https://stackoverflow.com/questions/822323/how-to-generate-a-random-int-in-c/39475626#39475626
 
 // Create map, player position and size, and time
 int map[16][12] = {1};
@@ -88,7 +87,7 @@ void monitor (void const *arg)
 void joystick(void const *arg)
 {
 	int up, right, down, left;
-	while (1)
+	while (true)
 	{
 		// Prevent joystick and bomb multiple inputs
 		osSemaphoreWait(semaphore_id_1, osWaitForever);
@@ -257,7 +256,8 @@ void win (void const *arg)
 			GLCD_DisplayString(4, 10, 1, string2);
 			sprintf(final_time, "Time: %ds", time);
 			GLCD_DisplayString(6, 6, 1, (unsigned char*)final_time);
-			while (true){
+			while (true)
+			{
 				end = 1;
 			}
 		}
@@ -313,16 +313,21 @@ int main (void)
 	t2id = osThreadCreate(osThread(bombs), NULL);
 	t3id = osThreadCreate(osThread(win), NULL);
 	
-	while (true){
+	while (true)
+	{
 		int buttonPushed = (LPC_GPIO2->FIOPIN >> 10) & 0x01;
+		
 		if (!buttonPushed && end == 1)
 		{
 			osThreadTerminate(t1id);
 			osThreadTerminate(t2id);
 			osThreadTerminate(t3id);
+			
 			end = time = 0;
+			
 			semaphore_id_1 = osSemaphoreCreate(osSemaphore(semaphore_1), 1);
 			semaphore_id_2 = osSemaphoreCreate(osSemaphore(semaphore_2), 0);
+			
 			for (int i = 0; i < 16; i++)
 			{
 				for (int j = 0; j < 12; j++)
@@ -338,6 +343,7 @@ int main (void)
 					}
 				}
 			}
+			
 			// Randomize map
 			pos_x = 0;
 			pos_y = rand() % 12;
@@ -345,9 +351,11 @@ int main (void)
 			map[15][rand() % 12] = 3;
 	
 			monitor(NULL);
+			
 			t1id = osThreadCreate(osThread(joystick), NULL);
 			t2id = osThreadCreate(osThread(bombs), NULL);
 			t3id = osThreadCreate(osThread(win), NULL);
+			
 			osDelay(4000);
 		}
 	}
